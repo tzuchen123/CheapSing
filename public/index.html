@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>錢櫃價格查詢</title>
+</head>
+
+<body>
+    <h1>錢櫃價格查詢</h1>
+
+    <form id="ktv-form">
+        <label for="store">分店：</label>
+        <select id="store">
+            <option value="">載入中...</option>
+        </select>
+
+        <br><br>
+
+        <label for="people">人數：</label>
+        <input type="number" id="people" min="1" placeholder="請輸入人數" />
+
+        <br><br>
+
+        <label for="day">星期：</label>
+        <select id="day">
+            <option value="週一～週四">週一～週四</option>
+            <option value="週五">週五</option>
+            <option value="週六">週六</option>
+            <option value="週日">週日</option>
+        </select>
+
+        <br><br>
+
+        <label for="time">時間段：</label>
+        <select id="time">
+            <option value="07:00~10:59">07:00~10:59</option>
+            <option value="11:00~17:59">11:00~17:59</option>
+            <option value="18:00~19:59">18:00~19:59</option>
+            <option value="20:00~23:59">20:00~23:59</option>
+            <option value="次日00:00~06:59">次日00:00~06:59</option>
+        </select>
+
+        <br><br>
+
+        <button type="button" onclick="lookupPrice()">查詢價格</button>
+    </form>
+
+    <h2>查詢結果：</h2>
+    <div id="result"></div>
+
+    <script>
+        const storeSelect = document.getElementById('store');
+
+        async function loadStores() {
+            try {
+                const res = await fetch('/api/stores');
+                const stores = await res.json();
+                storeSelect.innerHTML = '<option value="">請選擇分店</option>';
+                for (const store of stores) {
+                    const option = document.createElement('option');
+                    option.value = store.storeCode;
+                    option.textContent = store.storeName;
+                    storeSelect.appendChild(option);
+                }
+            } catch (e) {
+                storeSelect.innerHTML = '<option value="">載入失敗</option>';
+                console.error('載入分店資料失敗', e);
+            }
+        }
+
+        loadStores();
+
+        async function lookupPrice() {
+            const payload = {
+                storeCode: document.getElementById('store').value,
+                people: parseInt(document.getElementById('people').value),
+                day: document.getElementById('day').value,
+                time: document.getElementById('time').value
+            };
+
+            if (!payload.storeCode || !payload.people || !payload.day || !payload.time) {
+                alert('請完整填寫所有欄位');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/calculate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();  // ⬅️這邊改成正確命名 data
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = ''; // 清空舊內容
+
+                if (data.boxPricing) {
+                    const b = data.boxPricing;
+                    resultDiv.innerHTML += `
+                <h3>包廂計費方案</h3>
+                <p>推薦包廂：${b.boxName}</p>
+                <p>包廂費：${b.boxPrice} 元</p>
+                <p>每人最低餐飲消費：${b.minCharge} 元</p>
+                <p>加總後含服務費總額：${b.total} 元</p>
+                <p>平均每人：${b.perPerson} 元</p>
+            `;
+                } else {
+                    resultDiv.innerHTML += `<p>找不到適合的包廂方案</p>`;
+                }
+
+                if (data.personPricing) {
+                    const p = data.personPricing;
+                    resultDiv.innerHTML += `
+                <h3>人頭計費方案</h3>
+                <p>每人原價 + 餐飲：${p.rawPrice} 元</p>
+                <p>每人含服務費：${p.totalPerPerson} 元</p>
+                <p>總歡唱時數：${p.totalHours} 元</p>
+                <p>續唱費用：${p.extraHourPrice} 元</p>
+            `;
+                } else {
+                    resultDiv.innerHTML += `<p>找不到人頭計費方案</p>`;
+                }
+            } catch (err) {
+                alert("查詢失敗，請確認伺服器是否啟動或網路連線是否正常");
+                console.error(err);
+            }
+        }
+
+
+    </script>
+</body>
+
+</html>
