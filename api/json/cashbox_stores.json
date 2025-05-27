@@ -4,11 +4,7 @@
         "storeCode": "0200"
     },
     {
-        "storeName": "臺北林森店",
-        "storeCode": "K01"
-    },
-    {
-        "storeName": "臺北忠孝店",
+        "storeName": "臺北SOGO店",
         "storeCode": "0107"
     },
     {
@@ -64,11 +60,7 @@
         "storeCode": "0113"
     },
     {
-        "storeName": "高雄建興店",
-        "storeCode": "0120"
-    },
-    {
-        "storeName": "墾丁壹號店",
+        "storeName": "墾丁壹號",
         "storeCode": "0119"
     }
 ]

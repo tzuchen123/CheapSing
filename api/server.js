@@ -15,6 +15,24 @@ app.get('/', (req, res) => {
     res.send('Hello from backend!');
 });
 
+// 分店代碼映射：for group mode only
+const storeCodeMap = {
+    '0114': 'k17',
+    '0200': 'k02',
+    'K01': 'k03',
+    '0600': 'k07',
+    '0105': 'k11',
+    '0107': 'k15',
+    '0104': 'k21',
+    '0109': 'k25',
+    '0108': 'k23',
+    '0900': 'k29',
+    '0103': 'k31',
+    '0112': 'k65',
+    '0116': 'k63',
+    '0120': 'k68',
+};
+
 
 // 取得所有分店列表
 app.get('/api/stores', (req, res) => {
@@ -52,6 +70,16 @@ app.get('/api/time-options', (req, res) => {
             }
         }
         return res.json(Array.from(allTimes));
+    }
+
+    if (mode === 'group') {
+        const groupData = require('./json/cashbox_group_price.json');
+        const mappedCode = storeCodeMap[storeCode];
+        const store = groupData.find(s => s.storeCode === mappedCode);
+        if (!store) return res.status(404).json({ error: '找不到分店' });
+
+        const options = store.content.slice(1).map(row => `${row[0]}：${row[1]}`);
+        return res.json(options);
     }
 
     res.status(400).json({ error: '未知的 mode' });
@@ -158,6 +186,33 @@ app.post('/api/calculate', (req, res) => {
         };
     }
 
+    function calculateGroupPricing() {
+        const groupData = require('./json/cashbox_group_price.json');
+        const mappedCode = storeCodeMap[storeCode]; // ➜ 做店碼轉換
+        const store = groupData.find(s => s.storeCode === mappedCode);
+
+        if (!store) return null;
+
+        const normalize = s => s.replace(/[\uFF5E~－—–‒–]/g, '-').replace(/\s/g, '');
+        const match = store.content.find(row =>
+            normalize(row[0]) === normalize(day) && normalize(row[1]) === normalize(time)
+        );
+
+        if (!match) return null;
+        const price = parseInt(match[3]);
+        const baseHours = match[2];
+        const minCharge = parseInt(store.note?.[0]?.find(n => /基消|基礎消費/.test(n))?.match(/\d+/)?.[0] || '99');
+        const baseTotal = price + (people * minCharge);
+
+        return {
+            baseHours,
+            basePrice: price,
+            minCharge,
+            total: Math.ceil(baseTotal * 1.1),
+            perPerson: Math.ceil((baseTotal * 1.1) / people)
+        };
+    }
+
     // 根據 mode 呼叫對應的計算方式
     const result = {};
     if (mode === 'box') {
@@ -166,6 +221,9 @@ app.post('/api/calculate', (req, res) => {
     } else if (mode === 'person') {
         const personPricing = calculatePersonPricing();
         if (personPricing) result.personPricing = personPricing;
+    } else if (mode === 'group') {
+        const groupPricing = calculateGroupPricing();
+        if (groupPricing) result.groupPricing = groupPricing;
     }
 
     res.json(result);
