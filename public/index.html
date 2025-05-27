@@ -11,6 +11,14 @@
     <h1>錢櫃價格查詢</h1>
 
     <form id="ktv-form">
+        <label for="mode">計費方式：</label>
+        <select id="mode">
+            <option value="box">包廂</option>
+            <option value="person">歡樂唱（人頭）</option>
+        </select>
+
+        <br><br>
+
         <label for="store">分店：</label>
         <select id="store">
             <option value="">載入中...</option>
@@ -77,10 +85,11 @@
                 storeCode: document.getElementById('store').value,
                 people: parseInt(document.getElementById('people').value),
                 day: document.getElementById('day').value,
-                time: document.getElementById('time').value
+                time: document.getElementById('time').value,
+                mode: document.getElementById('mode').value
             };
 
-            if (!payload.storeCode || !payload.people || !payload.day || !payload.time) {
+            if (!payload.storeCode || !payload.people || !payload.day || !payload.time || !payload.mode) {
                 alert('請完整填寫所有欄位');
                 return;
             }
@@ -92,35 +101,31 @@
                     body: JSON.stringify(payload)
                 });
 
-                const data = await res.json();  // ⬅️這邊改成正確命名 data
+                const data = await res.json();
                 const resultDiv = document.getElementById('result');
-                resultDiv.innerHTML = ''; // 清空舊內容
+                resultDiv.innerHTML = '';
 
                 if (data.boxPricing) {
                     const b = data.boxPricing;
                     resultDiv.innerHTML += `
-                <h3>包廂計費方案</h3>
-                <p>推薦包廂：${b.boxName}</p>
-                <p>包廂費：${b.boxPrice} 元</p>
-                <p>每人最低餐飲消費：${b.minCharge} 元</p>
-                <p>加總後含服務費總額：${b.total} 元</p>
-                <p>平均每人：${b.perPerson} 元</p>
-            `;
-                } else {
-                    resultDiv.innerHTML += `<p>找不到適合的包廂方案</p>`;
+                        <h3>包廂計費方案</h3>
+                        <p>推薦包廂：${b.boxName}</p>
+                        <p>包廂費：${b.boxPrice} 元</p>
+                        <p>每人最低餐飲消費：${b.minCharge} 元</p>
+                        <p>加總後含服務費總額：${b.total} 元</p>
+                        <p>平均每人：${b.perPerson} 元</p>
+                    `;
                 }
 
                 if (data.personPricing) {
                     const p = data.personPricing;
                     resultDiv.innerHTML += `
-                <h3>人頭計費方案</h3>
-                <p>每人原價 + 餐飲：${p.rawPrice} 元</p>
-                <p>每人含服務費：${p.totalPerPerson} 元</p>
-                <p>總歡唱時數：${p.totalHours} 元</p>
-                <p>續唱費用：${p.extraHourPrice} 元</p>
-            `;
-                } else {
-                    resultDiv.innerHTML += `<p>找不到人頭計費方案</p>`;
+                        <h3>人頭計費方案</h3>
+                        <p>每人原價 + 餐飲：${p.rawPrice} 元</p>
+                        <p>每人含服務費：${p.totalPerPerson} 元</p>
+                        <p>總歡唱時數：${p.totalHours} 元</p>
+                        <p>續唱費用：${p.extraHourPrice} 元</p>
+                    `;
                 }
             } catch (err) {
                 alert("查詢失敗，請確認伺服器是否啟動或網路連線是否正常");
