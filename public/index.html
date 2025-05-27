@@ -4,94 +4,172 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>錢櫃價格查詢</title>
+    <title>錢櫃價格比價</title>
+    <style>
+        .card {
+            border: 1px solid #ccc;
+            padding: 1em;
+            margin-bottom: 1em;
+            border-radius: 8px;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>錢櫃價格查詢</h1>
+    <h1>錢櫃價格比價工具</h1>
+    <button onclick="addCard()">➕ 新增比價卡片</button>
+    <br><br>
+    <div id="card-container"></div>
 
-    <form id="ktv-form">
-        <label for="mode">計費方式：</label>
-        <select id="mode">
-            <option value="box">包廂</option>
-            <option value="person">歡樂唱（人頭）</option>
-        </select>
+    <template id="card-template">
+        <div class="card">
+            <button onclick="this.parentElement.remove()">❌ 移除</button><br><br>
 
-        <br><br>
+            <label>計費方式：
+                <select class="mode">
+                    <option value="" disabled selected>請選擇計費方式</option>
+                    <option value="box">包廂</option>
+                    <option value="person">歡樂唱（人頭）</option>
+                </select>
+            </label>
 
-        <label for="store">分店：</label>
-        <select id="store">
-            <option value="">載入中...</option>
-        </select>
+            <br><br>
 
-        <br><br>
+            <label>分店：
+                <select class="store">
+                    <option value="">載入中...</option>
+                </select>
+            </label>
 
-        <label for="people">人數：</label>
-        <input type="number" id="people" min="1" placeholder="請輸入人數" />
+            <br><br>
 
-        <br><br>
+            <label>人數：
+                <input type="number" class="people" min="1" placeholder="請輸入人數" />
+            </label>
 
-        <label for="day">星期：</label>
-        <select id="day">
-            <option value="週一～週四">週一～週四</option>
-            <option value="週五">週五</option>
-            <option value="週六">週六</option>
-            <option value="週日">週日</option>
-        </select>
+            <br><br>
 
-        <br><br>
+            <label>星期：
+                <select class="day">
+                    <option value="週一～週四">週一～週四</option>
+                    <option value="週五">週五</option>
+                    <option value="週六">週六</option>
+                    <option value="週日">週日</option>
+                </select>
+            </label>
 
-        <label for="time">時間段：</label>
-        <select id="time">
-            <option value="07:00~10:59">07:00~10:59</option>
-            <option value="11:00~17:59">11:00~17:59</option>
-            <option value="18:00~19:59">18:00~19:59</option>
-            <option value="20:00~23:59">20:00~23:59</option>
-            <option value="次日00:00~06:59">次日00:00~06:59</option>
-        </select>
+            <br><br>
 
-        <br><br>
+            <label>時間段：
+                <select class="time">
+                </select>
+            </label>
 
-        <button type="button" onclick="lookupPrice()">查詢價格</button>
-    </form>
+            <br><br>
 
-    <h2>查詢結果：</h2>
-    <div id="result"></div>
+            <div class="box-hours-group" style="display:none;">
+                <label>要唱多久（小時）：
+                    <input type="number" class="box-hours" min="1" max="12" value="1" />
+                </label>
+                <br><br>
+            </div>
+
+            <button onclick="lookupCardPrice(this)">查詢價格</button>
+            <div class="result"></div>
+        </div>
+    </template>
 
     <script>
-        const storeSelect = document.getElementById('store');
+        let storeOptions = [];
 
         async function loadStores() {
-            try {
-                const res = await fetch('/api/stores');
-                const stores = await res.json();
-                storeSelect.innerHTML = '<option value="">請選擇分店</option>';
-                for (const store of stores) {
-                    const option = document.createElement('option');
-                    option.value = store.storeCode;
-                    option.textContent = store.storeName;
-                    storeSelect.appendChild(option);
-                }
-            } catch (e) {
-                storeSelect.innerHTML = '<option value="">載入失敗</option>';
-                console.error('載入分店資料失敗', e);
+            const res = await fetch('/api/stores');
+            storeOptions = await res.json();
+        }
+
+        function createStoreDropdown(selectEl) {
+            selectEl.innerHTML = '<option value="">請選擇分店</option>';
+            for (const store of storeOptions) {
+                const option = document.createElement('option');
+                option.value = store.storeCode;
+                option.textContent = store.storeName;
+                selectEl.appendChild(option);
             }
         }
 
-        loadStores();
+        function addCard() {
+            const template = document.getElementById('card-template');
+            const clone = template.content.cloneNode(true);
+            const card = clone.querySelector('.card');
+            const storeSelect = card.querySelector('.store');
+            const modeSelect = card.querySelector('.mode');
 
-        async function lookupPrice() {
-            const payload = {
-                storeCode: document.getElementById('store').value,
-                people: parseInt(document.getElementById('people').value),
-                day: document.getElementById('day').value,
-                time: document.getElementById('time').value,
-                mode: document.getElementById('mode').value
-            };
+            // 建立分店選單
+            createStoreDropdown(storeSelect);
 
-            if (!payload.storeCode || !payload.people || !payload.day || !payload.time || !payload.mode) {
+            // 當 mode 或 store 改變時，自動更新時間段選項
+            storeSelect.addEventListener('change', () => updateTimeOptions(card));
+            modeSelect.addEventListener('change', () => updateTimeOptions(card));
+
+            const container = document.getElementById('card-container');
+            container.insertBefore(card, container.firstChild);
+
+            // 包廂計費的時候要可以填要唱多久
+            modeSelect.addEventListener('change', () => {
+                updateTimeOptions(card);
+
+                const boxHoursGroup = card.querySelector('.box-hours-group');
+                if (modeSelect.value === 'box') {
+                    boxHoursGroup.style.display = 'block';
+                } else {
+                    boxHoursGroup.style.display = 'none';
+                }
+            });
+        }
+
+        async function updateTimeOptions(card) {
+            const storeCode = card.querySelector('.store').value;
+            const mode = card.querySelector('.mode').value;
+            const timeSelect = card.querySelector('.time');
+
+            if (!storeCode || !mode) {
+                timeSelect.innerHTML = '<option value="">請先選擇分店與計費方式</option>';
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/time-options?storeCode=${storeCode}&mode=${mode}`);
+                const times = await res.json();
+                timeSelect.innerHTML = '<option value="">請選擇時間段</option>';
+                for (const t of times) {
+                    const opt = document.createElement('option');
+                    opt.value = t;
+                    opt.textContent = t;
+                    timeSelect.appendChild(opt);
+                }
+            } catch (e) {
+                timeSelect.innerHTML = '<option value="">載入失敗</option>';
+            }
+        }
+
+        async function lookupCardPrice(button) {
+            const card = button.closest('.card');
+            const storeCode = card.querySelector('.store').value;
+            const people = parseInt(card.querySelector('.people').value);
+            const day = card.querySelector('.day').value;
+            const time = card.querySelector('.time').value;
+            const mode = card.querySelector('.mode').value;
+            const resultDiv = card.querySelector('.result');
+
+            if (!storeCode || !people || !day || !time || !mode) {
                 alert('請完整填寫所有欄位');
                 return;
+            }
+
+            const payload = { storeCode, people, day, time, mode };
+
+            if (mode === 'box') {
+                payload.hours = parseInt(card.querySelector('.box-hours')?.value || 1);
             }
 
             try {
@@ -100,40 +178,38 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-
                 const data = await res.json();
-                const resultDiv = document.getElementById('result');
                 resultDiv.innerHTML = '';
 
-                if (data.boxPricing) {
+                if (mode === 'box' && data.boxPricing) {
                     const b = data.boxPricing;
                     resultDiv.innerHTML += `
                         <h3>包廂計費方案</h3>
                         <p>推薦包廂：${b.boxName}</p>
                         <p>包廂費：${b.boxPrice} 元</p>
                         <p>每人最低餐飲消費：${b.minCharge} 元</p>
-                        <p>加總後含服務費總額：${b.total} 元</p>
+                        <p>總金額含服務費：${b.total} 元</p>
                         <p>平均每人：${b.perPerson} 元</p>
                     `;
-                }
-
-                if (data.personPricing) {
+                } else if (mode === 'person' && data.personPricing) {
                     const p = data.personPricing;
                     resultDiv.innerHTML += `
                         <h3>人頭計費方案</h3>
-                        <p>每人原價 + 餐飲：${p.rawPrice} 元</p>
+                        <p>每人原價 ${p.rawPrice} 元</p>
+                        <p>每人餐飲：${p.personMin} 元</p>
                         <p>每人含服務費：${p.totalPerPerson} 元</p>
-                        <p>總歡唱時數：${p.totalHours} 元</p>
-                        <p>續唱費用：${p.extraHourPrice} 元</p>
+                        <p>總歡唱時數：${p.totalHours} 小時</p>
+                        <p>續唱費用：${p.extraHourPrice ?? '無'} 元</p>
                     `;
+                } else {
+                    resultDiv.innerHTML = `<p>查無對應價格方案</p>`;
                 }
             } catch (err) {
-                alert("查詢失敗，請確認伺服器是否啟動或網路連線是否正常");
-                console.error(err);
+                resultDiv.innerHTML = '<p style="color:red;">查詢失敗，請檢查伺服器或網路</p>';
             }
         }
 
-
+        loadStores().then(addCard);
     </script>
 </body>
 

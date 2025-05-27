@@ -16,7 +16,7 @@ app.get('/', (req, res) => {
 });
 
 
-// API: 取得所有分店列表
+// 取得所有分店列表
 app.get('/api/stores', (req, res) => {
     const filePath = path.join(__dirname, 'json', 'cashbox_stores.json');
     fs.readFile(filePath, 'utf8', (err, data) => {
@@ -28,9 +28,38 @@ app.get('/api/stores', (req, res) => {
     });
 });
 
-// 計算價格 API
+// 取得某分店可用的時間段（依照模式）
+app.get('/api/time-options', (req, res) => {
+    const { storeCode, mode } = req.query;
+    const normalize = s => s.replace(/[\uFF5E~]/g, '~').replace(/\s/g, '');
+
+    if (mode === 'person') {
+        const personData = require('./json/cashbox_person_price.json');
+        const store = personData.find(s => s.storeCode === storeCode);
+        if (!store) return res.status(404).json({ error: '找不到分店' });
+        const times = store.content.slice(1).map(row => normalize(row[0]));
+        return res.json(times);
+    }
+
+    if (mode === 'box') {
+        const boxData = require('./json/cashbox_box_price.json');
+        const store = boxData.find(s => s.storeCode === storeCode);
+        if (!store) return res.status(404).json({ error: '找不到分店' });
+        const allTimes = new Set();
+        for (const box of store.boxes) {
+            for (let i = 1; i < box.content.length; i++) {
+                allTimes.add(normalize(box.content[i][0]));
+            }
+        }
+        return res.json(Array.from(allTimes));
+    }
+
+    res.status(400).json({ error: '未知的 mode' });
+});
+
+// 計算價格 
 app.post('/api/calculate', (req, res) => {
-    const { storeCode, people, day, time, mode } = req.body;
+    const { storeCode, people, day, time, mode, hours } = req.body;
 
     const boxData = require('./json/cashbox_box_price.json');
     const personData = require('./json/cashbox_person_price.json');
@@ -59,18 +88,12 @@ app.post('/api/calculate', (req, res) => {
             const dayIndex = selectedBox.content[0].findIndex(col => normalize(col) === normalize(day));
             boxRow = selectedBox.content.find(r => normalize(r[0]) === normalize(time));
 
-            const hourCount = (() => {
-                const [startH, startM] = time.split('~')[0].split(':').map(Number);
-                const [endH, endM] = time.split('~')[1].split(':').map(Number);
-                const start = startH + startM / 60;
-                const end = endH + endM / 60;
-                return Math.max(1, Math.round(end - start));
-            })();
+
 
             if (boxRow && dayIndex !== -1 && boxRow[dayIndex] !== '-') {
                 pricePerHour = parseInt(boxRow[dayIndex]);
-                usedHours = hourCount;
-                boxPrice = pricePerHour * hourCount;
+                usedHours = hours;
+                boxPrice = pricePerHour * hours;
             }
         }
 
@@ -97,7 +120,7 @@ app.post('/api/calculate', (req, res) => {
             if (normalize(row[0]) === normalize(time)) {
                 const header = storePerson.content[0];
                 const col = header.findIndex(h => normalize(h) === normalize(day));
-                if (col !== -1 && row[col]) {
+                if (col !== -1 && row[col] && row[col].trim() !== '-') {
                     personRow = row;
                     personRaw = row[col];
                     break;
@@ -127,7 +150,8 @@ app.post('/api/calculate', (req, res) => {
         }
 
         return {
-            rawPrice: price + personMin,
+            rawPrice: price,
+            personMin: personMin,
             totalPerPerson: total,
             totalHours,
             extraHourPrice: matchExt ? parseInt(matchExt[1]) : null
