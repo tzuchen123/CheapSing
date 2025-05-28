@@ -1,0 +1,182 @@
+[
+  {
+    "storeName": "臺北內湖",
+    "storeCode": "111"
+  },
+  {
+    "storeName": "臺北石牌",
+    "storeCode": "128"
+  },
+  {
+    "storeName": "臺北錦州",
+    "storeCode": "124"
+  },
+  {
+    "storeName": "臺北中興",
+    "storeCode": "105"
+  },
+  {
+    "storeName": "臺北西寧",
+    "storeCode": "116"
+  },
+  {
+    "storeName": "臺北館前",
+    "storeCode": "122"
+  },
+  {
+    "storeName": "臺北通化",
+    "storeCode": "132"
+  },
+  {
+    "storeName": "臺北景美",
+    "storeCode": "108"
+  },
+  {
+    "storeName": "基隆基隆",
+    "storeCode": "123"
+  },
+  {
+    "storeName": "新北淡水",
+    "storeCode": "131"
+  },
+  {
+    "storeName": "新北汐止",
+    "storeCode": "133"
+  },
+  {
+    "storeName": "新北蘆洲",
+    "storeCode": "138"
+  },
+  {
+    "storeName": "新北重陽",
+    "storeCode": "120"
+  },
+  {
+    "storeName": "新北三重",
+    "storeCode": "107"
+  },
+  {
+    "storeName": "新北板前",
+    "storeCode": "110"
+  },
+  {
+    "storeName": "新北板後",
+    "storeCode": "119"
+  },
+  {
+    "storeName": "新北埔墘",
+    "storeCode": "121"
+  },
+  {
+    "storeName": "新北中和",
+    "storeCode": "141"
+  },
+  {
+    "storeName": "新北土城",
+    "storeCode": "118"
+  },
+  {
+    "storeName": "新北樹林",
+    "storeCode": "113"
+  },
+  {
+    "storeName": "新北三峽",
+    "storeCode": "134"
+  },
+  {
+    "storeName": "桃園復興",
+    "storeCode": "213"
+  },
+  {
+    "storeName": "桃園來來",
+    "storeCode": "204"
+  },
+  {
+    "storeName": "桃園桃中",
+    "storeCode": "208"
+  },
+  {
+    "storeName": "中壢中美",
+    "storeCode": "211"
+  },
+  {
+    "storeName": "新竹新竹",
+    "storeCode": "209"
+  },
+  {
+    "storeName": "苗栗頭份",
+    "storeCode": "210"
+  },
+  {
+    "storeName": "V-MIX西屯",
+    "storeCode": "514"
+  },
+  {
+    "storeName": "臺中文心",
+    "storeCode": "505"
+  },
+  {
+    "storeName": "臺中三民",
+    "storeCode": "504"
+  },
+  {
+    "storeName": "臺中美村",
+    "storeCode": "503"
+  },
+  {
+    "storeName": "臺中大里",
+    "storeCode": "511"
+  },
+  {
+    "storeName": "彰化彰化",
+    "storeCode": "510"
+  },
+  {
+    "storeName": "雲林斗六",
+    "storeCode": "512"
+  },
+  {
+    "storeName": "臺南成功",
+    "storeCode": "801"
+  },
+  {
+    "storeName": "高雄楠梓",
+    "storeCode": "713"
+  },
+  {
+    "storeName": "高雄中華",
+    "storeCode": "701"
+  },
+  {
+    "storeName": "高雄建工",
+    "storeCode": "707"
+  },
+  {
+    "storeName": "屏東旗艦",
+    "storeCode": "719"
+  },
+  {
+    "storeName": "V-MIX東港",
+    "storeCode": "721"
+  },
+  {
+    "storeName": "宜蘭宜蘭",
+    "storeCode": "142"
+  },
+  {
+    "storeName": "宜蘭羅東",
+    "storeCode": "137"
+  },
+  {
+    "storeName": "花蓮花蓮",
+    "storeCode": "129"
+  },
+  {
+    "storeName": "花蓮玉里",
+    "storeCode": "140"
+  },
+  {
+    "storeName": "臺東臺東",
+    "storeCode": "717"
+  }
+]

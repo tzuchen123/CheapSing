@@ -2,17 +2,31 @@
 const { execSync } = require('child_process');
 
 try {
-    console.log('開始抓取分店資料...');
-    execSync('node getStores.js', { stdio: 'inherit' });
+    // 錢櫃資料
+    console.log('開始抓取錢櫃分店資料...');
+    execSync('node getCashboxStores.js', { stdio: 'inherit' });
 
-    console.log('開始抓取包廂價錢...');
-    execSync('node getBox.js', { stdio: 'inherit' });
+    console.log('開始抓取錢櫃包廂價錢...');
+    execSync('node getCashboxBox.js', { stdio: 'inherit' });
 
-    console.log('開始抓取團體優惠價...');
-    execSync('node getGroup.js', { stdio: 'inherit' });
+    console.log('開始抓取錢櫃團體優惠價...');
+    execSync('node getCashboxGroup.js', { stdio: 'inherit' });
 
-    console.log('開始抓取歡樂唱個人價...');
-    execSync('node getPerson.js', { stdio: 'inherit' });
+    console.log('開始抓取錢櫃歡樂唱個人價...');
+    execSync('node getCashboxPerson.js', { stdio: 'inherit' });
+
+    // 好樂迪資料
+    console.log('開始抓取好樂迪分店資料...');
+    execSync('node getHolidayStores.js', { stdio: 'inherit' });
+
+    console.log('開始抓取好樂迪包廂價錢...');
+    execSync('node getHolidayBox.js', { stdio: 'inherit' });
+
+    console.log('開始抓取好樂迪團體優惠價...');
+    execSync('node getHolidayGroup.js', { stdio: 'inherit' });
+
+    console.log('開始抓取好樂迪歡樂唱個人價...');
+    execSync('node getHolidayPerson.js', { stdio: 'inherit' });
 
     console.log('所有爬蟲完成');
 } catch (err) {
