@@ -22,11 +22,6 @@
   - getAll.js 可一次執行所有爬蟲，更新所有 JSON 資料
   - 爬蟲來源為錢櫃官網
 
-## 線上體驗
-
-👉 點我一鍵部署到 Render  
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/tzuchen123/CheapSing)
-
 ## 資料來源
 
 - `json/cashbox_box_price.json`：包廂時段與價格

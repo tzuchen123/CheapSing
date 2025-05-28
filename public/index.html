@@ -218,14 +218,25 @@
 
                 if (mode === 'box' && data.boxPricing) {
                     const b = data.boxPricing;
+
                     resultDiv.innerHTML += `
                         <h3>包廂計費方案</h3>
                         <p>推薦包廂：${b.boxName}</p>
-                        <p>包廂費：${b.boxPrice} 元</p>
+                        <p>包廂費用：${b.boxPrice} 元</p>
                         <p>每人最低餐飲消費：${b.minCharge} 元</p>
                         <p>總金額含服務費：${b.total} 元</p>
                         <p style="color: red; font-weight: bold;">平均每人：${b.perPerson} 元</p>
                     `;
+
+                    if (Array.isArray(b.breakdown) && b.breakdown.length > 0) {
+                        resultDiv.innerHTML += `<p>包廂費用明細：</p><ul>`;
+                        for (const seg of b.breakdown) {
+                            resultDiv.innerHTML += `
+                                <li>${seg.timeRange}｜${seg.rate} 元／小時 × ${seg.minutes / 60} 小時 → ${seg.subtotal} 元</li>
+                            `;
+                        }
+                        resultDiv.innerHTML += `</ul>`;
+                    }
                 } else if (mode === 'person' && data.personPricing) {
                     const p = data.personPricing;
                     resultDiv.innerHTML += `

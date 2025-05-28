@@ -101,8 +101,21 @@ app.post('/api/calculate', (req, res) => {
 
     const normalize = s => s.replace(/[\uFF5E~]/g, '~').replace(/\s/g, '');
 
+    // 將時間段格式轉換成分鐘值，例如 "18:00~19:59" -> [1080, 1199]
+    function parseHourRange(rangeStr) {
+        if (!rangeStr.includes('~')) return [0, 0]; // 防錯處理
+        const [start, end] = rangeStr.split('~');
+        const toMins = t => {
+            const parts = t.split(':');
+            const h = parseInt(parts[0] || '0');
+            const m = parseInt(parts[1] || '0');
+            return h * 60 + m;
+        };
+        return [toMins(start), toMins(end) + 1];
+    }
+
     function calculateBoxPricing() {
-        let selectedBox, boxRow, pricePerHour = null, usedHours = null, boxPrice = null;
+        let selectedBox = null;
 
         for (const box of storeBox.boxes) {
             const maxPeople = parseInt(box.boxName.match(/\d+(?=人)/g)?.pop() || '0');
@@ -112,33 +125,65 @@ app.post('/api/calculate', (req, res) => {
             }
         }
 
-        if (selectedBox) {
-            const dayIndex = selectedBox.content[0].findIndex(col => normalize(col) === normalize(day));
-            boxRow = selectedBox.content.find(r => normalize(r[0]) === normalize(time));
+        if (!selectedBox) return null;
 
+        const baseTimeMins = parseHourRange(time)[0];
+        const totalMinutes = hours * 60;
+        const dayIndex = selectedBox.content[0].findIndex(col => normalize(col) === normalize(day));
+        if (dayIndex === -1) return null;
 
+        const segments = selectedBox.content.slice(1)
+            .map(row => ({
+                timeRange: row[0],
+                from: parseHourRange(row[0])[0],
+                to: parseHourRange(row[0])[1],
+                rate: row[dayIndex] === '-' ? null : parseInt(row[dayIndex])
+            }))
+            .filter(s => s.rate !== null)
+            .sort((a, b) => a.from - b.from);
 
-            if (boxRow && dayIndex !== -1 && boxRow[dayIndex] !== '-') {
-                pricePerHour = parseInt(boxRow[dayIndex]);
-                usedHours = hours;
-                boxPrice = pricePerHour * hours;
+        let remaining = totalMinutes;
+        let curStart = baseTimeMins;
+        let boxPrice = 0;
+        let breakdown = [];
+
+        for (const seg of segments) {
+            if (remaining <= 0) break;
+            if (curStart >= seg.to) continue;
+            if (curStart < seg.from) {
+                const gap = Math.min(seg.from - curStart, remaining);
+                curStart += gap;
+                remaining -= gap;
             }
+            const segStart = Math.max(curStart, seg.from);
+            const segEnd = Math.min(seg.to, segStart + remaining);
+            const duration = segEnd - segStart;
+            const perMinuteRate = seg.rate / 60;
+            const cost = Math.ceil(duration * perMinuteRate);
+
+            boxPrice += cost;
+            remaining -= duration;
+            curStart = segEnd;
+            breakdown.push({
+                timeRange: seg.timeRange,
+                rate: seg.rate,
+                minutes: duration,
+                subtotal: cost
+            });
         }
 
         const boxMinCharge = parseInt(storeBox.minimum.match(/\d+/)?.[0] || '0');
-        if (boxPrice !== null) {
-            const baseTotal = boxPrice + (boxMinCharge * people);
-            return {
-                boxName: selectedBox.boxName,
-                boxPrice,
-                usedHours,
-                minCharge: boxMinCharge,
-                total: Math.ceil(baseTotal * 1.1),
-                perPerson: Math.ceil((baseTotal * 1.1) / people)
-            };
-        }
+        const baseTotal = boxPrice + (boxMinCharge * people);
 
-        return null;
+        return {
+            boxName: selectedBox.boxName,
+            boxPrice,
+            usedHours: hours,
+            minCharge: boxMinCharge,
+            total: Math.ceil(baseTotal * 1.1),
+            perPerson: Math.ceil((baseTotal * 1.1) / people),
+            breakdown
+        };
     }
 
     function calculatePersonPricing() {
