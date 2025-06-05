@@ -1,6 +1,14 @@
-# 🎤 錢櫃價格比價工具｜CheapSing
+# 錢櫃價格比價工具｜CheapSing
 
 這是一個專為台灣錢櫃 KTV 所打造的價格比較工具，幫助使用者快速查詢各分店在不同計費模式下的歡唱費用，並自動計算平均每人價格與總金額。
+
+## Demo
+https://cheapsing.onrender.com/
+
+## 技術棧
+
+- 前端：純 HTML + 原生 JavaScript（無框架）
+- 後端：Node.js + Express
 
 ## 功能特色
 
@@ -29,16 +37,12 @@
 - `json/cashbox_group_price.json`：團唱時段與價格
 - `json/cashbox_stores.json`：分店代碼與名稱
 
-## 技術架構
-
-- 前端：純 HTML + 原生 JavaScript（無框架）
-- 後端：Node.js + Express
-
 ## 🧪 本機開發
 
 ```bash
 git clone https://github.com/tzuchen123/CheapSing.git
 cd CheapSing
+cd api
 npm install
 node server.js
 ```
