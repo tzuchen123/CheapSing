@@ -22,8 +22,8 @@ try {
     console.log('開始抓取好樂迪包廂價錢...');
     execSync('node getHolidayBox.js', { stdio: 'inherit' });
 
-    console.log('開始抓取好樂迪團體優惠價...');
-    execSync('node getHolidayGroup.js', { stdio: 'inherit' });
+    // console.log('開始抓取好樂迪團體優惠價...');
+    // execSync('node getHolidayGroup.js', { stdio: 'inherit' });
 
     console.log('開始抓取好樂迪歡樂唱個人價...');
     execSync('node getHolidayPerson.js', { stdio: 'inherit' });

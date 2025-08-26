@@ -26,6 +26,8 @@ const stores = require('../json/holiday_stores.json');
                 const modal = document.querySelector('.bs-example-modal-lg-box.show');
                 const tbody = modal.querySelector('tbody');
                 const rows = Array.from(tbody.querySelectorAll('tr'));
+                const note = modal?.querySelector('#box_item > li:nth-child(1)')?.innerText?.trim() || '';
+
                 const result = [];
 
                 let currentDay = null;
@@ -55,6 +57,7 @@ const stores = require('../json/holiday_stores.json');
                     result.push({
                         boxName: currentDay,
                         content: [...buffer],
+                        note: note
                     });
                 }
 
@@ -64,7 +67,7 @@ const stores = require('../json/holiday_stores.json');
             allStores.push({
                 storeName: store.storeName,
                 storeCode: store.storeCode,
-                boxes: boxData
+                boxes: boxData,
             });
 
         } catch (err) {
