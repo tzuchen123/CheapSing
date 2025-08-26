@@ -105,13 +105,24 @@ app.post('/api/calculate', (req, res) => {
     function parseHourRange(rangeStr) {
         if (!rangeStr.includes('~')) return [0, 0]; // 防錯處理
         const [start, end] = rangeStr.split('~');
-        const toMins = t => {
-            const parts = t.split(':');
+
+        const toMins = (t) => {
+            const clean = t.replace('次日', ''); // 去掉 "次日"
+            const parts = clean.split(':');
             const h = parseInt(parts[0] || '0');
             const m = parseInt(parts[1] || '0');
             return h * 60 + m;
         };
-        return [toMins(start), toMins(end) + 1];
+
+        const from = toMins(start);
+        let to = toMins(end) + 1; // 保持原本的 +1
+
+        // 若結束時間帶有「次日」，補上 24 小時
+        if (end.includes('次日')) {
+            to += 24 * 60;
+        }
+
+        return [from, to];
     }
 
     function calculateBoxPricing() {
@@ -124,7 +135,6 @@ app.post('/api/calculate', (req, res) => {
                 break;
             }
         }
-
         if (!selectedBox) return null;
 
         const baseTimeMins = parseHourRange(time)[0];
